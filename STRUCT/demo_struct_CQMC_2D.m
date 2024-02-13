@@ -1,0 +1,197 @@
+function demo_struct_CQMC_2D
+%--------------------------------------------------------------------------
+% OBJECT.
+%--------------------------------------------------------------------------
+% In this demo, the integration domain "Omega" is obtained by set
+% operations between two domains with piecewise NURBS boundaries.
+% Such a boundary is tracked in the attached subroutine "define_domain"
+% (see line 230).
+%
+% In the demo, set the input "operation_parm" with values in the set
+% {1,2,3,4}, having in mind that they refer to the operations
+%       1. union, 2. intersection, 3. diff, 4. symm. diff.
+% on two NURBS domains defined by "domain_type1", "domain_type2".
+% These last parameters select specific bivariate domains introduced by the
+% routine "define_domain". If no input is given, by default symmetric
+% difference is choosen between two domains used in the reference paper.
+% 
+% We compute a full rule QMC over "Omega" and a compressed one say CQMC,
+% "sharing" the same integrals for polynomials up to a total degree.
+%
+% We report the cputime required for computing the compressed rule and the
+% residual with respect to the moments of QMC.
+%--------------------------------------------------------------------------
+% Dates
+%--------------------------------------------------------------------------
+% First version: May 28, 2022;
+% Checked: June 03, 2022.
+%--------------------------------------------------------------------------
+% Authors
+%--------------------------------------------------------------------------
+% G. Elefante, A. Sommariva, M. Vianello
+%--------------------------------------------------------------------------
+% Paper
+%--------------------------------------------------------------------------
+% "CQMC: an improved code for low-dimensional Compressed Quasi-MonteCarlo
+% cubature"
+% G. Elefante, A. Sommariva and M. Vianello
+%--------------------------------------------------------------------------
+
+clear all; clf;
+format long;
+
+% Cardinality of the pointset in bounding box.
+card=100000;
+
+% Compressed QMC degree of precision.
+degV=5:5:20;
+
+.......................... Main code below ..............................
+    
+% ........... Technical settings ...........
+
+% Nbox is a technical parameter for indomain routine; in doubt set 100.
+Nbox=100;
+
+% In indomain routine one must be certain that points are inside the
+% domain. In our cubature needs we just wants some points in the domain.
+% Consequently, if we are not fully sure that a point is in the domain, due
+% to geometrical issues, we do not take it into account.
+safe_mode=1;
+
+% Compression tolerance.
+tol=1e-10;
+
+% Compression algorithm: 1: lsqnonneg 2: LHDM.
+%comp_type=2;
+
+% Nest:  nesting parameter.
+%     If 0 all the initial Halton points are considered at the first stage.
+%     If 1, smaller sets of increasing dimensions are considered along an
+%     iteration process.
+%     Usually 1 is a better choice for mild degrees.
+nest=1;
+
+% ........... Define domain using built-in function ...........
+d1 = define_domain('disk',[-1 0], 3);
+d2 = define_domain('polygon',[0 0; 2 0; 3 2; 1 3.5; -1 2]);
+operation_parm = 'U';
+f = @(x,y) ((x-1).^2 + (y-1).^2).^(1/2);
+
+XY=[]; bbox=[];
+res1={}; cpu_comp1=[]; cpu_comp2=[]; card_CQMC=[]; TW1={}; XYW1={};
+int_qmc={};  int_cqmc={};   abs_err_qmc={};    abs_err_cqmc={};
+for deg=degV
+
+    % Determine CQMC rule with nodes T and weights w.
+    % Determine QMC rule with nodes XY and weights W.
+    [T,w,XY,W_QMC,res,moms1,bbox,cpus,vol]=make_rule(deg,...
+        d1,d2,operation_parm,card,tol,XY);
+    
+    W = W_QMC*ones(size(XY,1),1);
+    TW1{end+1}=[T w]; 
+    XYW1{end+1}=[XY W];
+    res1{end+1}=res;
+    cpu_comp1(end+1)=cpus(1);
+    cpu_comp2(end+1)=cpus(2);
+    card_CQMC(end+1)=size(T,1);
+    
+    i_qmc = W'*f(XY(:,1),XY(:,2));    i_cqmc = w'*f(T(:,1),T(:,2));
+    int_qmc{end+1}=i_qmc; 
+    int_cqmc{end+1}=i_cqmc; 
+    abs_err_cqmc{end+1}=abs(i_cqmc-84.775404124752910);
+    abs_err_qmc{end+1}=abs(i_qmc-84.775404124752910);
+end
+
+a=min(bbox.Vertices(:,1)); b=max(bbox.Vertices(:,1)); 
+c=min(bbox.Vertices(:,2)); d=max(bbox.Vertices(:,2));
+
+% ........... Statistics ...........
+
+fprintf('\n \t ....................... STATISTICS ...................... ')
+fprintf('\n \t OPERATION: ');
+switch operation_parm
+    case 'U'
+        operation_str='Union';
+        
+    case 'I'
+        operation_str='Intersection';
+    case 'D'
+        operation_str='Set difference';
+end
+disp(operation_str);
+fprintf('\n \t CARDINALITY HALTON SET       : %7.0f',card);
+fprintf('\n \t CARDINALITY QMC (IN DOMAIN)  : %7.0f',size(XY,1));
+fprintf('\n \t BOX                          : [%1.2g,%1.2g]x[%1.2g,%1.2g]',...
+    a,b,c,d);
+area_bbox=abs(b-a)*abs(d-c);
+fprintf('\n \t BOX AREA                     : %5.15f',area_bbox);
+
+if isempty(moms1) == 0
+    fprintf('\n \t DOMAIN AREA                  : %5.15f',vol);
+    fprintf('\n \t moms(1)                      : %5.15f',moms1(1));
+    
+    fprintf('\n \t ')
+    fprintf('\n \t .........................................................');
+    fprintf('\n \t                    DESCRIPTION');
+    fprintf('\n \t 1. We compute the cputime required for the computation of');
+    fprintf('\n \t    "full" QMC rule.');
+    fprintf('\n \t 2. We compute the cputime required for the computation of');
+    fprintf('\n \t    "compressed" CQMC rule.'); 
+    fprintf('\n \t 3. By MOMENTS RESIDUAL, we show how much the CQMC rule ');
+    fprintf('\n \t    matches the moments "mom" of the "full" QMC rule.');
+    fprintf('\n \t    It is norm(U''*w-mom) where "w" are the weights');
+    fprintf('\n \t    of the compressed rule.');
+    for k=1:length(degV)
+        deg=degV(k);
+        
+        fprintf('\n \n \t .......................... deg: %2.0f ...................... ',...
+            deg);
+        fprintf('\n \t CPUTIME: QMC rule: %1.2e COMPRESSION: %1.2e',...
+            cpu_comp1(k),cpu_comp2(k));
+        
+        resL=res1{k};
+        
+        for m=1:length(resL)
+            fprintf('\n \t MOMENTS RESIDUAL (%2.0f )  : %1.1e',m,resL(m));
+        end
+        
+        fprintf('\n \t CARDINALITY CQMC        : %6.0f',card_CQMC(k))
+        
+    end
+    
+end
+fprintf('\n \t ......................................................... \n \n');
+
+% ..... Plot domains and pointsets .....
+clf;
+figure(1);
+[x1,y1] = plotdomain(d1);   
+[x2,y2] = plotdomain(d2);
+plot(x1,y1,'r-');
+hold on;
+axis equal;
+plot(x2,y2,'b-');
+hold off;
+pause;
+
+clf;
+figure(2)
+plot(x1,y1,'r-');
+hold on;
+axis equal;
+plot(x2,y2,'b-');
+hold on;
+plot(bbox);
+if isempty(XY) == 0
+    plot(XY(:,1),XY(:,2),'k.');
+    plot(T(:,1),T(:,2),'ro','LineWidth',2,...
+        'MarkerEdgeColor','r',...
+        'MarkerFaceColor','r',...
+        'MarkerSize',4)
+   else
+        fprintf(2,'\n \t Figure 2: No point to draw. \n');
+end
+strtitle=strcat(operation_str,'. Degree: ',num2str(degV(end)));
+title(strtitle)
+hold off;
