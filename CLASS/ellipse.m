@@ -17,7 +17,7 @@ classdef ellipse
 %   boundary.
 %
 % AUTHOR: M.Santoro.
-% LAST UPDATE: 02/13/2024.
+% LAST UPDATE: 02/14/2024.
     
     properties
         center;
@@ -64,10 +64,7 @@ classdef ellipse
         % OUTPUT
         %   bool - (array) 1xN logical array. In particular:
         %       0: point is out the ellipse, 1: point is in the ellipse.
-            bool = [];
-            for p=points
-                bool(end+1) = (((p(1) - obj.center(1))^2)/obj.a^2 + ((p(2) - obj.center(2))^2)/obj.b^2 <= 1);
-            end
+            bool = ((points(1,:) - obj.center(1)).^2/obj.a ^2 + (points(2,:) - obj.center(2)).^2/obj.b ^2 < 1);
         end
         
         function [x,y] = plotdomain(obj)

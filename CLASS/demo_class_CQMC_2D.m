@@ -56,7 +56,7 @@ nest=1;
 
 % ........... Define domain using built-in function ...........
 d1 = disk ([ -1 0] , 4) ;
-d2 = ellipse ([2 -2] , sqrt (12) , sqrt (6) ) ;
+d2 = ellipse ([2 -2] , sqrt (12) , sqrt (6)) ;
 operation_parm = 'I';
 f = @(x,y) x+1-x;
 

@@ -16,7 +16,7 @@ classdef polygon
 %   boundary.
 %
 % AUTHOR: M.Santoro.
-% LAST UPDATE: 02/13/2024.
+% LAST UPDATE: 02/14/2024.
     
     properties
         vertices
@@ -49,11 +49,8 @@ classdef polygon
         % OUTPUT
         %   bool - (array) 1xN logical array. In particular:
         %       0: point is out the polygon, 1: point is in the polygon.
-            pol = polyshape(obj.vertices);
-            bool = [];
-            for p=points
-                bool(end+1) = isinterior(pol,p(1),p(2));
-            end
+            polygon = polyshape(obj.vertices(:,1),obj.vertices(:,2));
+            bool = isinterior(polygon,points(1,:),points(2,:))';
         end
         
         function [x,y] = plotdomain(obj)
