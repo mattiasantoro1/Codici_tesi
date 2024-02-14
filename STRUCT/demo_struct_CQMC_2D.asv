@@ -2,11 +2,11 @@
 % OBJECT.
 %--------------------------------------------------------------------------
 % In this demo, the integration domain "Omega" is obtained by set
-% operations between two domains with piecewise struct
+% operations between two domains with piecewise NURBS boundaries.
 %
 % In the demo, set the input "operation_parm" with values in the set
-% {'U','I','D'}, having in mind that they refer to the operations
-%       'U' union, 'I' intersection, 'D' diff.
+% {1,2,3,4}, having in mind that they refer to the operations
+%       'U' union, 'I' intersection, 'D' diff
 % These last parameters select specific bivariate domains introduced by the
 % routine "define_domain".
 % 
@@ -65,7 +65,7 @@ tol=1e-10;
 %     If 1, smaller sets of increasing dimensions are considered along an
 %     iteration process.
 %     Usually 1 is a better choice for mild degrees.
-%nest=1;
+nest=1;
 
 % ........... Define domain using built-in function ...........
 d1 = define_domain('disk',[-1 0], 3);
