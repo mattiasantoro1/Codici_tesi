@@ -15,27 +15,15 @@ function inside = indomain(points,domain)
 %       0: point is out of the domain, 1: point is in the domain.
 %
 % AUTHOR: M.Santoro.
-% LAST UPDATE: 02/13/2024
+% LAST UPDATE: 02/14/2024
 
 % PREALLOCATING IN-DOMAIN ARRAY
 inside = [];
 switch domain.name
     case 'disk'
-        for p=points
-            if (p(1)-domain.center(1))^2 + (p(2)-domain.center(2))^2 < domain.radius^2
-                inside(end+1) = 1;
-            else
-                inside(end+1) = 0;
-            end
-        end
+        inside = ((points(1,:) - domain.center(1)).^2 + (points(2,:) - domain.center(2)).^2 < domain.radius ^2);
     case 'ellipse'
-        for p=points
-            if (p(1)-domain.center(1))^2/domain.a^2 + (p(2)-domain.center(2))^2/domain.b^2 < 1
-                inside(end+1) = 1;
-            else
-                inside(end+1) = 0;
-            end
-        end
+        inside = ((points(1,:) - domain.center(1)).^2/domain.a ^2 + (points(2,:) - domain.center(2)).^2/domain.b ^2 < 1);
     case 'polygon'
         polygon = polyshape(domain.vertices(:,1),domain.vertices(:,2));
         inside = isinterior(polygon,points(1,:),points(2,:))';
