@@ -61,8 +61,8 @@ if nargin < 4, operation_parm='U'; end
 if nargin < 5, card=10^6; end
 %if nargin < 6, nest=1; end
 %if nargin < 7, comp_type=2; end
-if nargin < 6, tol=e-10; end
-if nargin < 7, XY=[]; end
+if nargin < 8, tol=e-10; end
+if nargin < 9, XY=[]; end
 
 %--------------------------------------------------------------------------
 % 1. DEFINE BOUNDING BOXES USING BUILT-IN FUNCTIONS
@@ -112,13 +112,13 @@ vol=area_bbox*size(XY,1)/card;
 
 W=vol/size(XY,1);
 
-%routine_vers=1;
-%switch routine_vers
-    %case 1
-        [T,w,res,moms]=cqmc(deg,XY,tol);
+routine_vers=1;
+switch routine_vers
+    case 1
+        [T,w,res,moms]=cqmc_01(deg,XY,tol,nest,comp_type);
         w=w*vol; % scale weights
         moms=moms*vol; % scale moments
-    %case 2
-        %[T,w,res,moms]=cqmc_02(deg,XY,vol,tol,nest,comp_type);
-%end
+    case 2
+        [T,w,res,moms]=cqmc_02(deg,XY,vol,tol,nest,comp_type);
+end
 cpus(2)=toc;

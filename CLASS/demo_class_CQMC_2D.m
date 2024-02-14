@@ -2,17 +2,13 @@
 % OBJECT.
 %--------------------------------------------------------------------------
 % In this demo, the integration domain "Omega" is obtained by set
-% operations between two domains with piecewise NURBS boundaries.
-% Such a boundary is tracked in the attached subroutine "define_domain"
-% (see line 230).
+% operations between two domains with piecewise classes.
 %
 % In the demo, set the input "operation_parm" with values in the set
 % {1,2,3,4}, having in mind that they refer to the operations
-%       1. union, 2. intersection, 3. diff, 4. symm. diff.
-% on two NURBS domains defined by "domain_type1", "domain_type2".
-% These last parameters select specific bivariate domains introduced by the
-% routine "define_domain". If no input is given, by default symmetric
-% difference is choosen between two domains used in the reference paper.
+%       'U' union, 'I' intersection, 'D' diff.
+% These last parameters select specific bivariate domains modelled with
+% 'disk','ellipse' and 'polygon' classes.
 % 
 % We compute a full rule QMC over "Omega" and a compressed one say CQMC,
 % "sharing" the same integrals for polynomials up to a total degree.
@@ -39,20 +35,20 @@ Nbox=100;
 % domain. In our cubature needs we just wants some points in the domain.
 % Consequently, if we are not fully sure that a point is in the domain, due
 % to geometrical issues, we do not take it into account.
-safe_mode=1;
+%safe_mode=1;
 
 % Compression tolerance.
 tol=1e-10;
 
 % Compression algorithm: 1: lsqnonneg 2: LHDM.
-comp_type=2;
+%comp_type=2;
 
 % Nest:  nesting parameter.
 %     If 0 all the initial Halton points are considered at the first stage.
 %     If 1, smaller sets of increasing dimensions are considered along an
 %     iteration process.
 %     Usually 1 is a better choice for mild degrees.
-nest=1;
+%nest=1;
 
 % ........... Define domain using built-in function ...........
 d1 = disk ([ -1 0] , 4) ;
@@ -68,7 +64,7 @@ for deg=degV
     % Determine CQMC rule with nodes T and weights w.
     % Determine QMC rule with nodes XY and weights W.
     [T,w,XY,W_QMC,res,moms1,bbox,cpus,vol]=make_rule(deg,...
-        d1,d2,operation_parm,card,nest,comp_type,tol,XY);
+        d1,d2,operation_parm,card,tol,XY);
     
     W = W_QMC*ones(size(XY,1),1);
     TW1{end+1}=[T w]; XYW1{end+1}=[XY W];
